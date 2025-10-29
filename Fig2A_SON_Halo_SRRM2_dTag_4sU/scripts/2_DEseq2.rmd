@@ -1,0 +1,116 @@
+
+```{r setup, include = FALSE}
+getwd()
+```
+
+Load libraries:
+```{r}
+library("DESeq2")
+library("tidyverse")
+library("pheatmap")
+library("RColorBrewer")
+```
+
+
+Comparison: SRRM2 depletion vs DMSO control
+
+```{r}
+#Load the matrix of counts from featureCounts
+cts <- as.matrix(read.csv("../data/SRRM2depl_featureCounts.txt", sep="\t", row.names="Geneid"))
+head(cts, 2)
+coldata <- data.frame(condition = factor(c("control", "control", "SRRM2depl", "SRRM2depl")))
+
+# Add row names
+rownames(coldata) <- c("control_1", "control_2", "SRRM2depl_1", "SRRM2depl_2")
+coldata
+```
+
+```{r}
+dds <- DESeqDataSetFromMatrix(countData = cts,
+                              colData = coldata,
+                              design = ~ condition)
+dds
+```
+
+```{r}
+keep <- rowSums(counts(dds)) >= 10 #set threshold to filter low count genes
+dds <- dds[keep,]
+```
+
+```{r}
+dds <- DESeq(dds)
+res <- results(dds)
+resultsNames(dds)
+resLFC <- lfcShrink(dds, coef="condition_SRRM2depl_vs_control", type="apeglm")
+write.csv(as.data.frame(resLFC), 
+          file="../data/resLFC_SRRM2depl_vs_control.csv")
+```
+
+
+Comparison: SON depletion vs DMSO control
+
+```{r}
+#Load the matrix of counts from featureCounts
+cts <- as.matrix(read.csv("../data/SONdepl_featureCounts.txt", sep="\t", row.names="Geneid"))
+head(cts, 2)
+coldata <- data.frame(condition = factor(c("control", "control", "SONdepl", "SONdepl")))
+
+# Add row names
+rownames(coldata) <- c("control_1", "control_2", "SONdepl_1", "SONdepl_2")
+coldata
+```
+
+```{r}
+dds <- DESeqDataSetFromMatrix(countData = cts,
+                              colData = coldata,
+                              design = ~ condition)
+dds
+```
+
+```{r}
+keep <- rowSums(counts(dds)) >= 10 #set threshold to filter low count genes
+dds <- dds[keep,]
+```
+
+```{r}
+dds <- DESeq(dds)
+res <- results(dds)
+resultsNames(dds)
+resLFC <- lfcShrink(dds, coef="condition_SONdepl_vs_control", type="apeglm")
+write.csv(as.data.frame(resLFC), 
+          file="../data/resLFC_SONdepl_vs_control.csv")
+```
+
+Comparison: double depletion vs DMSO control
+
+```{r}
+#Load the matrix of counts from featureCounts
+cts <- as.matrix(read.csv("../data/Doubledepl_featureCounts.txt", sep="\t", row.names="Geneid"))
+head(cts, 2)
+coldata <- data.frame(condition = factor(c("control", "control", "doubledepl", "doubledepl")))
+
+# Add row names
+rownames(coldata) <- c("control_1", "control_2", "doubledepl_1", "doubledepl_2")
+coldata
+```
+
+```{r}
+dds <- DESeqDataSetFromMatrix(countData = cts,
+                              colData = coldata,
+                              design = ~ condition)
+dds
+```
+
+```{r}
+keep <- rowSums(counts(dds)) >= 10 #set threshold to filter low count genes
+dds <- dds[keep,]
+```
+
+```{r}
+dds <- DESeq(dds)
+res <- results(dds)
+resultsNames(dds)
+resLFC <- lfcShrink(dds, coef="condition_Doubledepl_vs_control", type="apeglm")
+write.csv(as.data.frame(resLFC), 
+          file="../data/resLFC_Doubledepl_vs_control.csv")
+```

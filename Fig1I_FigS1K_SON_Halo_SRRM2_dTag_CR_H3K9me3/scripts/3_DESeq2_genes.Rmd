@@ -1,0 +1,172 @@
+##the follwing code compares double-depletion with control cell lines, adjust the bam files for SON-depletion only or SRRM2-depletion only
+
+#load the needed libraries
+library(Rsamtools)
+library(GenomicAlignments)
+library(data.table)
+library(GenomicFeatures)
+library(tidyverse)
+library(DESeq2)
+library(pheatmap)
+library(RColorBrewer)
+library(regioneR)
+library(ggrepel)
+
+
+#input bam files
+control_rep1_bam <- 'path/to/bam/file'
+control_rep2_bam <- 'path/to/bam/file'
+control_rep3_bam <- 'path/to/bam/file'
+
+double_depl_rep1_bam <- 'path/to/bam/file'
+double_depl_rep2_bam <- 'path/to/bam/file'
+double_depl_rep3_bam <- 'path/to/bam/file'
+
+
+
+# specify which nonmandatory fields to include
+# (get full list by running scanBamWhat())
+field_mapq <- c("mapq") 
+param <- ScanBamParam(what=field_mapq)
+
+# load the entire bam
+control_rep1 <- readGAlignments(control_rep1_bam, param = param)
+control_rep2 <- readGAlignments(control_rep2_bam, param = param)
+control_rep3 <- readGAlignments(control_rep3_bam, param = param)
+
+double_depl_rep1 <- readGAlignments(double_depl_rep1_bam, param = param)
+double_depl_rep2 <- readGAlignments(double_depl_rep2_bam, param = param)
+double_depl_rep3 <- readGAlignments(double_depl_rep3_bam, param = param)
+
+
+# keep only unspliced reads
+control_rep1 <- control_rep1[!grepl('N', cigar(control_rep1))] #N stands for "skipped region from the reference" 
+control_rep2 <- control_rep2[!grepl('N', cigar(control_rep2))]
+control_rep3 <- control_rep3[!grepl('N', cigar(control_rep3))]
+double_depl_rep1 <- double_depl_rep1[!grepl('N', cigar(double_depl_rep1))]
+double_depl_rep2 <- double_depl_rep2[!grepl('N', cigar(double_depl_rep2))]
+double_depl_rep3 <- double_depl_rep3[!grepl('N', cigar(double_depl_rep3))]
+
+#read genes file
+genes <- read.table("../../shared/genes.bed", header = FALSE, sep="\t",stringsAsFactors=FALSE, quote="")
+genes <- genes[genes[, "V7"] == "protein_coding",] #keep only protein-coding genes
+colnames(genes) <- c("chrom", "start", "end", "strand", "name", "ensembl", "gene_type", "score", "SPIN", "HiC") 
+genes$length <- as.numeric(genes$end) - as.numeric(genes$start)
+names_rows <- apply(genes[, c("chrom", "start", "end", "strand", "name", "ensembl", "gene_type", "score", "SPIN", "HiC", "length")], 1 , paste, collapse="&") #Put all the info in the name so that then later they can be extracted
+rownames(genes) <- names_rows
+genes.gr <- toGRanges(genes)  #make it a GRanges object
+
+
+
+# count reads
+genes_control_rep1 <- countOverlaps(genes.gr, control_rep1, type = 'any', ignore.strand = TRUE)
+genes_control_rep2 <- countOverlaps(genes.gr, control_rep2, type = 'any', ignore.strand = TRUE)
+genes_control_rep3 <- countOverlaps(genes.gr, control_rep3, type = 'any', ignore.strand = TRUE)
+genes_double_depl_rep1 <- countOverlaps(genes.gr, double_depl_rep1, type = 'any', ignore.strand = TRUE)
+genes_double_depl_rep2 <- countOverlaps(genes.gr, double_depl_rep2, type = 'any', ignore.strand = TRUE)
+genes_double_depl_rep3 <- countOverlaps(genes.gr, double_depl_rep3, type = 'any', ignore.strand = TRUE)
+
+
+
+# get a table from the count vector
+
+genes_control_rep1 <- data.table(genes_id = names(genes_control_rep1),
+                             count   = unname(genes_control_rep1))
+genes_control_rep2 <- data.table(genes_id = names(genes_control_rep2),
+                                  count   = unname(genes_control_rep2))
+genes_control_rep3 <- data.table(genes_id = names(genes_control_rep3),
+                                    count   = unname(genes_control_rep3))
+genes_double_depl_rep1 <- data.table(genes_id = names(genes_double_depl_rep1),
+                                  count   = unname(genes_double_depl_rep1))
+genes_double_depl_rep2 <- data.table(genes_id = names(genes_double_depl_rep2),
+                                  count   = unname(genes_double_depl_rep2))
+genes_double_depl_rep3 <- data.table(genes_id = names(genes_double_depl_rep3),
+                                     count   = unname(genes_double_depl_rep3))
+
+
+#save files
+saveRDS(genes_control_rep1, file="../data/genes_control_rep1.Rda")
+saveRDS(genes_control_rep2, file="../data/genes_control_rep2.Rda")
+saveRDS(genes_control_rep3, file="../data/genes_control_rep3.Rda")
+saveRDS(genes_double_depl_rep1, file="../data/genes_double_depl_rep1.Rda")
+saveRDS(genes_double_depl_rep2, file="../data/genes_double_depl_rep2.Rda")
+saveRDS(genes_double_depl_rep3, file="../data/genes_double_depl_rep3.Rda")
+
+
+#load files (available in the data folder)
+genes_control_rep1 <- readRDS(file="../data/genes_control_rep1.Rda")
+genes_control_rep2 <- readRDS(file="../data/genes_control_rep2.Rda")
+genes_control_rep3 <- readRDS(file="../data/genes_control_rep3.Rda")
+genes_double_depl_rep1 <- readRDS(file="../data/genes_double_depl_rep1.Rda")
+genes_double_depl_rep2 <- readRDS(file="../data/genes_double_depl_rep2.Rda")
+genes_double_depl_rep3 <- readRDS(file="../data/genes_double_depl_rep3.Rda")
+
+
+
+# build a common matrix where rows are the genes files
+genes_control_rep1 <- genes_control_rep1[, 1:2]
+colnames(genes_control_rep1) <- c("genes_id", "control_rep1") 
+genes_control_rep2 <- genes_control_rep2[, 1:2]
+colnames(genes_control_rep2) <- c("genes_id", "control_rep2") 
+genes_control_rep3 <- genes_control_rep3[, 1:2]
+colnames(genes_control_rep3) <- c("genes_id", "control_rep3") 
+
+genes_double_depl_rep1 <- genes_double_depl_rep1[, 1:2]
+colnames(genes_double_depl_rep1) <- c("genes_id", "double_depl_rep1") 
+genes_double_depl_rep2 <- genes_double_depl_rep2[, 1:2]
+colnames(genes_double_depl_rep2) <- c("genes_id", "double_depl_rep2") 
+genes_double_depl_rep3 <- genes_double_depl_rep3[, 1:2]
+colnames(genes_double_depl_rep3) <- c("genes_id", "double_depl_rep3") 
+
+genes.counts.merged <- merge(genes_control_rep1, genes_control_rep2, by = "genes_id")
+genes.counts.merged <- merge(genes.counts.merged, genes_control_rep3, by = "genes_id")
+genes.counts.merged <- merge(genes.counts.merged, genes_double_depl_rep1, by = "genes_id")
+genes.counts.merged <- merge(genes.counts.merged, genes_double_depl_rep2, by = "genes_id")
+genes.counts.merged <- merge(genes.counts.merged, genes_double_depl_rep3, by = "genes_id")
+
+genes.counts.merged <- genes.counts.merged %>% remove_rownames %>% column_to_rownames(var="genes_id")
+saveRDS(genes.counts.merged, file="../data/double_genes.counts.merged.Rda")
+
+
+## DESEQ2
+
+#create sheet with conditions 
+coldata <- data.table(
+  rows = c("control_rep1", "control_rep2", "control_rep3", "double_depl_rep1", "double_depl_rep2","double_depl_rep3"),
+  condition = c("control", "control","control", "double_depl", "double_depl", "double_depl"))
+coldata <- coldata %>% remove_rownames %>% column_to_rownames(var="rows")
+
+#run DE analysis
+dds <- DESeqDataSetFromMatrix(countData = genes.counts.merged,
+                              colData = coldata,
+                              design = ~ condition)
+
+keep <- rowSums(counts(dds)) >= 10 #keep if at least 10 reads in tot 
+dds <- dds[keep,] 
+
+dds <- DESeq(dds)
+
+res <- results(dds)
+res
+
+resultsNames(dds) #write this as coefficient
+
+
+# schrink
+res_LFC <- lfcShrink(dds, coef="condition_double_depl_vs_control", type="apeglm")
+res_LFC
+
+
+# order them by p-value and save
+
+res_LFC <- res_LFC[order(res_LFC$pvalue),]
+
+saveRDS(res_LFC, file="../data/genes_double_vs_control_res_LFC.Rda")
+
+write.csv(as.data.frame(res_LFC), 
+          file="../data/genes_double_vs_control_res_LFC.csv")
+
+
+
+
+

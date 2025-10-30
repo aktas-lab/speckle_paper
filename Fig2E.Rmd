@@ -1,0 +1,289 @@
+```{r}
+if (!require("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+BiocManager::install("chromPlot")
+```
+
+```{r}
+library("chromPlot")
+data(hg_gap)
+head(hg_gap)
+```
+```{r}
+chromPlot(gaps=hg_gap)
+```
+```{r}
+library("TxDb.Hsapiens.UCSC.hg19.knownGene")
+txdb <- TxDb.Hsapiens.UCSC.hg19.knownGene
+library(GenomicFeatures)
+txgr <- transcripts(txdb)
+txgr
+```
+```{r}
+chromPlot(gaps=hg_gap, annot1=txgr)
+```
+
+```{r}
+hg38_gap=read.csv("data/hg38_UCSC_GAP_simple.csv", sep='\t')
+colnames(hg38_gap) = c('Chrom', 'Start', 'End', 'Name')
+head(hg38_gap)
+```
+```{r}
+hg38_cen=read.csv("data/hg38_UCSC_centromeres_fix.csv", sep='\t')
+colnames(hg38_cen) = c('Chrom', 'Start', 'End', 'Name')
+head(hg38_cen)
+```
+
+```{r}
+hg38 = merge(hg38_gap, hg38_cen, by=c('Chrom', 'Start', 'End', 'Name'), all=T)
+hg38
+```
+
+
+```{r}
+chromPlot(gaps=hg38)
+
+```
+```{r}
+library(AnnotationDbi)
+library(TxDb.Hsapiens.UCSC.hg38.knownGene)
+library(org.Hs.eg.db)
+
+txdb <- TxDb.Hsapiens.UCSC.hg38.knownGene
+genes_txdb <- genes(txdb)
+genes_df <- as.data.frame(genes_txdb)
+
+
+res_df = read.csv('.../HCT116_SON_SRRM2_double_pA_mRNA/DESeq2_samples.SRRM2andSONdep/DEseq_basic_DEresults_LFCshrunk.tsv', sep='\t')
+
+lfc_shrunk <- read.delim(".../HCT116_SON_SRRM2_double_pA_mRNA/DESeq2_samples.SRRM2andSONdep/DEseq_basic_DEresults_LFCshrunk.tsv", header = TRUE, stringsAsFactors = FALSE)
+
+lfc_shrunk$ENSEMBL = rownames(lfc_shrunk)
+lfc_shrunk$ENSEMBL <- sub("\\..*", "", lfc_shrunk$ENSEMBL)
+
+annot <- select(org.Hs.eg.db,
+                keys = lfc_shrunk$ENSEMBL,
+                columns = c("ENTREZID", "SYMBOL"),
+                keytype = "ENSEMBL")
+
+merged_data <- merge(annot, genes_df, by.x = "ENTREZID", by.y = "gene_id", all.x = TRUE)
+complete_data <- merge(lfc_shrunk, merged_data, by.x = "ENSEMBL", by.y = "ENSEMBL", all.x = TRUE)
+head(complete_data)
+
+```
+```{r}
+
+# Create a BED-like data frame with added columns
+bed_df <- data.frame(
+    Chrom = complete_data$seqnames,
+    Start = complete_data$start,
+    End = complete_data$end,
+    name = complete_data$SYMBOL,
+    L2FC = complete_data$log2FoldChange,
+    strand = complete_data$strand,
+    stringsAsFactors = FALSE
+)
+
+# View the resulting data frame
+head(bed_df)
+
+```
+
+
+
+```{r}
+downregulated = na.omit(bed_df[bed_df$L2FC < -1,])
+downregulated['Colors'] = 'red'
+downregulated
+```
+
+```{r}
+upregulated = na.omit(bed_df[bed_df$L2FC > 1,])
+upregulated['Colors'] = 'green'
+upregulated
+```
+```{r}
+write.table(
+    downregulated,                      # The data frame to write
+    file = "deltaSpeckles_DOWNregulated_L2FC_1.bed",         # File name for the output BED file
+    sep = "\t",                  # Tab-separated values, typical for BED files
+    quote = FALSE,               # No quotes around character values
+    row.names = FALSE,           # Do not include row names
+    col.names = FALSE            # BED files typically do not have a header
+)
+
+write.table(
+    upregulated,                      # The data frame to write
+    file = "deltaSpeckles_UPregulated_L2FC_1.bed",         # File name for the output BED file
+    sep = "\t",                  # Tab-separated values, typical for BED files
+    quote = FALSE,               # No quotes around character values
+    row.names = FALSE,           # Do not include row names
+    col.names = FALSE            # BED files typically do not have a header
+)
+```
+
+```{r}
+chromPlot(gaps=hg38, annot1=downregulated)
+
+```
+```{r}
+chromPlot(gaps=hg38, annot1=upregulated)
+
+```
+
+
+
+```{r}
+library(GenomicRanges)
+library(BSgenome.Hsapiens.UCSC.hg38)
+library(BSgenome)
+
+getGC <- function(genome, ranges){
+
+  require(BSgenome)
+  require(Biostrings)
+  require(GenomicRanges)
+
+  s <- BSgenome::getSeq(genome, ranges)
+  a <- Biostrings::alphabetFrequency(s)
+
+  gc <- apply(a[,c("G","C")], 1, sum)
+  al <- apply(a[,c("A", "T", "C", "G")], 1, sum)
+  ranges$gc.content <- 100*gc/al
+  ranges
+
+}
+
+bins <- tileGenome(seqinfo(Hsapiens), tilewidth=100000, cut.last.tile.in.chrom=TRUE)
+
+gc = getGC(genome = BSgenome.Hsapiens.UCSC.hg38, ranges = bins)
+head(gc)
+```
+```{r}
+gc_gr_bak = gc
+```
+
+```{r}
+library(RColorBrewer)
+display.brewer.all()
+```
+```{r}
+rev(brewer.pal(5,'RdBu'))
+```
+
+```{r}
+quantile(gc$gc.content, na.rm=T,probs=c(0,.2,.4,.6,.8,1))
+```
+```{r}
+(quantile(gc$gc.content, na.rm=T,probs=c(0,.2,.4,.6,.8,1)) + quantile(gc$gc.content, na.rm=T,probs=c(.2,.4,.6,.8,1,1)))/2
+
+```
+
+
+```{r}
+library(lsr)
+
+colors = rev(brewer.pal(5,'RdBu'))
+value_bins <- quantileCut(gc$gc.content, n = 5, labels = FALSE, include.lowest = TRUE)
+hex_colors <- colors[value_bins]
+gc_colors = gc
+gc_colors$Colors = hex_colors
+
+gc_colors = dropSeqlevels(gc_colors, 'chrM', pruning.mode="coarse")
+head(gc_colors)
+```
+
+```{r fig.width=6, fig.height=5}
+chromPlot(gaps=hg38, annot1=downregulated, bands=gc_colors, figCols=24)
+```
+```{r}
+library(lsr)
+
+colors = rev(brewer.pal(5,'RdBu'))
+value_bins <- cut(gc$gc.content, breaks = c(0,36,42,48,54,100), labels = FALSE, include.lowest = TRUE)
+hex_colors <- colors[value_bins]
+gc_colors = gc
+gc_colors$Colors = hex_colors
+
+gc_colors = dropSeqlevels(gc_colors, 'chrM', pruning.mode="coarse")
+head(gc_colors)
+
+chromPlot(gaps=hg38, annot1=downregulated, bands=gc_colors, figCols=24)
+
+```
+```{r}
+chromPlot(gaps=hg38, annot1=downregulated, annot2=upregulated,  chrSide=c(-1, 1, 1, 1, 1, 1, 1, 1),
+          colAnnot1='#915dab', colAnnot2='#53b455',
+          bands=gc_colors, figCols=24)
+```
+```{r}
+pdf("chromPlot_l2FC1.pdf", width = 20, height = 5)
+chromPlot(gaps=hg38, annot1=downregulated, annot2=upregulated,  chrSide=c(-1, 1, 1, 1, 1, 1, 1, 1),
+          colAnnot1='#915dab', colAnnot2='#53b455',
+          bands=gc_colors, figCols=24)
+dev.off()
+```
+```{r}
+downregulated05 = na.omit(bed_df[bed_df$L2FC < -0.5,])
+upregulated05 = na.omit(bed_df[bed_df$L2FC > 0.5,])
+chromPlot(gaps=hg38, annot1=downregulated05, annot2=upregulated05, chrSide=c(-1, 1, 1, 1, 1, 1, 1, 1),
+          colAnnot1='#915dab', colAnnot2='#53b455',
+          bands=gc_colors, figCols=24)
+
+```
+```{r}
+pdf("chromPlot_l2FC_05.pdf", width = 20, height = 5)
+chromPlot(gaps=hg38, annot1=downregulated05, annot2=upregulated05, chrSide=c(-1, 1, 1, 1, 1, 1, 1, 1),
+          colAnnot1='#915dab', colAnnot2='#53b455',
+          bands=gc_colors, figCols=24)
+dev.off()
+```
+
+```{r}
+chromPlot(gaps=hg38, annot1=downregulated, annot2=upregulated, chrSide=c(-1, 1, 1, 1, 1, 1, 1, 1),
+          bands=gc_colors, 
+          colAnnot1='#915dab', colAnnot2='#53b455',
+          figCols=24)
+```
+```{r}
+chromPlot(gaps=hg38, annot1=downregulated, annot2=upregulated, chrSide=c(-1, 1, 1, 1, 1, 1, 1, 1),
+          bands=gc_colors, 
+          colAnnot1='#915dab', colAnnot2='#53b455',
+          figCols=4,
+          chr = c(11,18,19,21))
+```
+```{r}
+pdf("chromPlot_l2FC_1_subsetCHR.pdf", width = 8, height = 6)
+chromPlot(gaps=hg38, annot1=downregulated, annot2=upregulated, chrSide=c(-1, 1, 1, 1, 1, 1, 1, 1),
+          bands=gc_colors, 
+          colAnnot1='#915dab', colAnnot2='#53b455',
+          figCols=4,
+          chr = c(11,18,19,21))
+dev.off()
+
+```
+
+```{r}
+isochores = read.csv('.../analysis/ncbi_genomes/Homo_sapiens_GCF_000001405.40_isochores_fixed_chroms.bed',sep='\t', header=F)
+colnames(isochores) = c('Chrom', 'Start', 'End', 'Name', '', '','','','RGB')
+isochores
+```
+
+```{r}
+x = isochores$RGB
+isochores$Colors = sapply(strsplit(x, ","), function(x)
+    rgb(x[1], x[2], x[3], maxColorValue=255))
+
+```
+
+
+```{r}
+chromPlot(gaps=hg38, annot1=downregulated, bands=isochores, figCols=25)
+
+```
+
+```{r}
+upregulated
+```
+

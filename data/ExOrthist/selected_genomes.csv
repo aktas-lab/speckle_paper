@@ -1,0 +1,29 @@
+,taxid,taxname,genome
+2,8364,Xenopus tropicalis,GCF_000004195.4
+19,9685,Felis catus,GCF_018350175.1
+57,7897,Latimeria chalumnae,GCF_037176945.1
+64,8496,Alligator mississippiensis,GCF_030867095.1
+73,8469,Chelonia mydas,GCF_015237465.2
+86,28377,Anolis carolinensis,GCF_035594765.1
+164,9157,Parus major,GCF_001522545.3
+187,259920,Rhincodon typus,GCF_021869965.1
+250,27687,Erpetoichthys calabaricus,GCF_900747795.2
+258,194408,Rhinatrema bivittatum,GCF_901001135.1
+264,1415580,Microcaecilia unicolor,GCF_901765095.1
+295,386614,Amblyraja radiata,GCF_010909765.2
+301,260995,Geotrypetes seraphini,GCF_902459505.1
+312,31138,Trachemys scripta elegans,GCF_013100865.1
+315,8524,Zootoca vivipara,GCF_963506605.1
+349,10090,Mus musculus,GCF_000001635.27
+360,8245,Xiphias gladius,GCF_016859285.1
+363,8384,Bufo bufo,GCF_905171765.1
+369,13397,Carcharodon carcharias,GCF_017639515.1
+393,7888,Protopterus annectens,GCF_019279795.1
+442,286002,Gopherus flavomarginatus,GCF_025201925.1
+447,8895,Apus apus,GCF_020740795.1
+469,8345,Bombina bombina,GCF_027579735.1
+503,460621,Euleptes europaea,GCF_029931775.1
+516,90069,Solea solea,GCF_958295425.1
+583,7955,Danio rerio,GCF_000002035.6
+586,9606,Homo sapiens,GCF_000001405.40
+590,9031,Gallus gallus,GCF_016699485.2

@@ -1,0 +1,38 @@
+taxid	species	spp	genus	family	order	class	phylum	kingdom	domain
+10090	Mus_musculus		Mus	Muridae	Rodentia	Mammalia	Chordata	Metazoa	Eukaryota
+9685	Felis_catus		Felis	Felidae	Carnivora	Mammalia	Chordata	Metazoa	Eukaryota
+9606	Homo_sapiens		Homo	Hominidae	Primates	Mammalia	Chordata	Metazoa	Eukaryota
+
+9031	Gallus_gallus		Gallus	Phasianidae	Galliformes	Aves	Chordata	Metazoa	Eukaryota
+9157	Parus_major		Parus	Paridae	Passeriformes	Aves	Chordata	Metazoa	Eukaryota
+8895	Apus_apus		Apus	Apodidae	Apodiformes	Aves	Chordata	Metazoa	Eukaryota
+
+8496	Alligator_mississippiensis		Alligator	Alligatoridae	Crocodylia		Chordata	Metazoa	Eukaryota
+
+31138	Trachemys_scripta_elegans	Trachemys_scripta	Trachemys	Emydidae	Testudines		Chordata	Metazoa	Eukaryota
+8469	Chelonia_mydas		Chelonia	Cheloniidae	Testudines		Chordata	Metazoa	Eukaryota
+286002	Gopherus_flavomarginatus		Gopherus	Testudinidae	Testudines		Chordata	Metazoa	Eukaryota
+
+460621	Euleptes_europaea		Euleptes	Sphaerodactylidae	Squamata		Chordata	Metazoa	Eukaryota
+8524	Zootoca_vivipara		Zootoca	Lacertidae	Squamata		Chordata	Metazoa	Eukaryota
+28377	Anolis_carolinensis		Anolis	Dactyloidae	Squamata		Chordata	Metazoa	Eukaryota
+
+8384	Bufo_bufo		Bufo	Bufonidae	Anura	Amphibia	Chordata	Metazoa	Eukaryota
+8364	Xenopus_tropicalis		Xenopus	Pipidae	Anura	Amphibia	Chordata	Metazoa	Eukaryota
+8345	Bombina_bombina		Bombina	Bombinatoridae	Anura	Amphibia	Chordata	Metazoa	Eukaryota
+
+260995	Geotrypetes_seraphini		Geotrypetes	Dermophiidae	Gymnophiona	Amphibia	Chordata	Metazoa	Eukaryota
+194408	Rhinatrema_bivittatum		Rhinatrema	Rhinatrematidae	Gymnophiona	Amphibia	Chordata	Metazoa	Eukaryota
+1415580	Microcaecilia_unicolor		Microcaecilia	Siphonopidae	Gymnophiona	Amphibia	Chordata	Metazoa	Eukaryota
+
+27687	Erpetoichthys_calabaricus		Erpetoichthys	Polypteridae	Polypteriformes	Cladistia	Chordata	Metazoa	Eukaryota
+7897	Latimeria_chalumnae		Latimeria	Coelacanthidae	Coelacanthiformes		Chordata	Metazoa	Eukaryota
+7888	Protopterus_annectens		Protopterus	Protopteridae	Lepidosireniformes		Chordata	Metazoa	Eukaryota
+
+7955	Danio_rerio		Danio	Cyprinidae	Cypriniformes	Actinopteri	Chordata	Metazoa	Eukaryota
+90069	Solea_solea		Solea	Soleidae	Pleuronectiformes	Actinopteri	Chordata	Metazoa	Eukaryota
+8245	Xiphias_gladius		Xiphias	Xiphiidae	Istiophoriformes	Actinopteri	Chordata	Metazoa	Eukaryota
+
+259920	Rhincodon_typus		Rhincodon	Rhincodontidae	Orectolobiformes	Chondrichthyes	Chordata	Metazoa	Eukaryota
+13397	Carcharodon_carcharias		Carcharodon	Alopiidae	Lamniformes	Chondrichthyes	Chordata	Metazoa	Eukaryota
+386614	Amblyraja_radiata		Amblyraja	Rajidae	Rajiformes	Chondrichthyes	Chordata	Metazoa	Eukaryota
